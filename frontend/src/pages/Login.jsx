@@ -10,13 +10,13 @@ const Login = ({ onLogin }) => {
   const [success, setSuccess] = useState('');
   const [colleges, setColleges] = useState([]);
   const [collegesLoading, setCollegesLoading] = useState(false);
-  
+
   // Form states
   const [loginData, setLoginData] = useState({
     email: '',
     password: ''
   });
-  
+
   const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
@@ -24,9 +24,9 @@ const Login = ({ onLogin }) => {
     role: 'student',
     collegeId: ''
   });
-  
+
   const navigate = useNavigate();
-  const API_URL = 'http://localhost:8000/api';
+  const API_URL = `${process.env.REACT_APP_API_URL}/api`;
 
   // Check if already logged in
   useEffect(() => {
@@ -44,7 +44,7 @@ const Login = ({ onLogin }) => {
       const response = await axios.get(`${API_URL}/colleges`);
       console.log("Colleges fetched:", response.data);
       setColleges(response.data);
-      
+
       // Auto-select first college if none selected
       if (response.data.length > 0 && !registerData.collegeId) {
         console.log("Auto-selecting first college:", response.data[0]._id);
@@ -100,20 +100,20 @@ const Login = ({ onLogin }) => {
         email: loginData.email.trim(),
         password: loginData.password
       });
-      
+
       console.log("Login successful:", response.data);
-      
+
       // Save token and user data
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
+
       // Call onLogin callback if provided
       if (onLogin && typeof onLogin === 'function') {
         onLogin(response.data.token, response.data.user);
       }
-      
+
       setSuccess('Login successful! Redirecting...');
-      
+
       // Navigate to dashboard
       navigate('/');
 
@@ -135,7 +135,7 @@ const Login = ({ onLogin }) => {
 
     // Validation
     const { name, email, password, role, collegeId } = registerData;
-    
+
     if (!name?.trim()) {
       setError('Name is required');
       setLoading(false);
@@ -174,20 +174,20 @@ const Login = ({ onLogin }) => {
       console.log("Sending to backend:", dataToSend);
 
       const response = await axios.post(`${API_URL}/auth/register`, dataToSend);
-      
+
       console.log("Registration successful:", response.data);
-      
+
       // Save token and user data
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
+
       // Call onLogin callback if provided
       if (onLogin && typeof onLogin === 'function') {
         onLogin(response.data.token, response.data.user);
       }
-      
+
       setSuccess('Registration successful! Redirecting...');
-      
+
       // Navigate to dashboard
       navigate('/');
 
@@ -197,7 +197,7 @@ const Login = ({ onLogin }) => {
         data: err.response?.data,
         message: err.message
       });
-      
+
       if (err.response?.data?.message) {
         setError(`Server: ${err.response.data.message}`);
       } else if (err.response?.status === 400) {
@@ -205,7 +205,7 @@ const Login = ({ onLogin }) => {
       } else if (err.response?.status === 500) {
         setError('Server error. Please try again later.');
       } else if (err.message === 'Network Error') {
-        setError('Cannot connect to server. Is backend running on http://localhost:8000 ?');
+        setError(`Cannot connect to server. Is backend running on ${process.env.REACT_APP_API_URL} ?`);
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -369,9 +369,9 @@ const Login = ({ onLogin }) => {
                 disabled={collegesLoading || colleges.length === 0}
               >
                 <option value="">
-                  {collegesLoading ? 'Loading colleges...' : 
-                   colleges.length === 0 ? 'No colleges available' : 
-                   'Select your college'}
+                  {collegesLoading ? 'Loading colleges...' :
+                    colleges.length === 0 ? 'No colleges available' :
+                      'Select your college'}
                 </option>
                 {colleges.map(college => (
                   <option key={college._id} value={college._id}>

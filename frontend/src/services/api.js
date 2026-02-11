@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api', // Make sure this matches your backend
+  baseURL: `${process.env.REACT_APP_API_URL}/api`, // Uses environment variable
 });
 
 // Request interceptor
@@ -56,7 +56,7 @@ api.interceptors.response.use(
     
     if (error.message === 'Network Error') {
       console.error('Network Error - Check if backend is running');
-      alert('Cannot connect to server. Make sure backend is running on http://localhost:8000');
+      alert(`Cannot connect to server. Make sure backend is running on ${process.env.REACT_APP_API_URL}`);
     }
     
     return Promise.reject(error);

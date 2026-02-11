@@ -399,7 +399,7 @@ const Profile = ({ onLogout }) => {
                           </td>
                           <td>
                             <button
-                              onClick={() => window.open(`http://localhost:8000${req.fileUrl}`, '_blank')}
+                              onClick={() => window.open(`${process.env.REACT_APP_API_URL}${req.fileUrl}`, '_blank')}
                               className="view-file-btn"
                             >
                               <FiFileText /> View File

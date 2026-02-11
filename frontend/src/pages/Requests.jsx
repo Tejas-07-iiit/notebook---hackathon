@@ -212,7 +212,7 @@ const Requests = ({ onLogout }) => {
                   <div className="request-actions">
                     <button
                       className="btn btn-secondary"
-                      onClick={() => window.open(`http://localhost:8000${request.fileUrl}`, '_blank')}
+                      onClick={() => window.open(`${process.env.REACT_APP_API_URL}${request.fileUrl}`, '_blank')}
                     >
                       <FiEye /> View File
                     </button>
@@ -322,7 +322,7 @@ const Requests = ({ onLogout }) => {
                   <div className="d-flex gap-2">
                     <button
                       className="btn btn-secondary"
-                      onClick={() => window.open(`http://localhost:8000${request.fileUrl}`, '_blank')}
+                      onClick={() => window.open(`${process.env.REACT_APP_API_URL}${request.fileUrl}`, '_blank')}
                     >
                       <FiEye /> View File
                     </button>
