@@ -56,7 +56,7 @@ const Sidebar = ({ onLogout }) => {
           <span className="nav-icon"><FiSettings /></span>
           <span>Profile</span>
         </NavLink>
-        <button onClick={onLogout} className="nav-item" style={{ width: '100%', textAlign: 'left' }}>
+        <button onClick={onLogout} className="nav-item">
           <span className="nav-icon"><FiLogOut /></span>
           <span>Logout</span>
         </button>

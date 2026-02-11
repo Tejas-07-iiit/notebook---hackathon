@@ -51,7 +51,7 @@ const NoteCard = ({ note }) => {
           )}
         </div>
         
-        <div className="note-meta" style={{ marginTop: '1rem' }}>
+        <div className="note-meta">
           <span><FiUser /> {note.uploadedBy?.name || 'Unknown User'}</span>
           <span><FiCalendar /> {note.createdAt ? formatDate(note.createdAt) : 'Unknown Date'}</span>
         </div>

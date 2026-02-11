@@ -97,41 +97,30 @@ const Requests = ({ onLogout }) => {
   const getStatusBadge = (status) => {
     const styles = {
       pending: {
-        bg: '#fef3c7',
-        color: '#92400e',
+        className: 'badge',
+        style: { background: 'var(--warning-light)', color: 'var(--warning)' },
         icon: <FiClock />,
         text: 'Pending Review'
       },
       approved: {
-        bg: '#d1fae5',
-        color: '#065f46',
+        className: 'badge',
+        style: { background: 'var(--success-light)', color: 'var(--success)' },
         icon: <FiCheck />,
         text: 'Approved'
       },
       rejected: {
-        bg: '#fee2e2',
-        color: '#991b1b',
+        className: 'badge',
+        style: { background: 'var(--danger-light)', color: 'var(--danger)' },
         icon: <FiX />,
         text: 'Rejected'
       }
     };
 
-    const style = styles[status] || styles.pending;
+    const config = styles[status] || styles.pending;
 
     return (
-      <span style={{
-        backgroundColor: style.bg,
-        color: style.color,
-        padding: '6px 12px',
-        borderRadius: '20px',
-        fontSize: '0.85rem',
-        fontWeight: '600',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        marginLeft: '10px'
-      }}>
-        {style.icon} {style.text}
+      <span className={config.className} style={{ ...config.style, display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }}>
+        {config.icon} {config.text}
       </span>
     );
   };
@@ -154,36 +143,28 @@ const Requests = ({ onLogout }) => {
         <Sidebar onLogout={onLogout} />
 
         <div className="main-content">
-          <Header
-            title="My Note Requests"
-            subtitle="Track your submitted note requests"
-          />
-
-          {message && (
-            <div style={{
-              backgroundColor: message.includes('Error') ? '#fee2e2' : '#d1fae5',
-              color: message.includes('Error') ? '#dc2626' : '#065f46',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              marginBottom: '1.5rem'
-            }}>
-              {message}
-            </div>
-          )}
-
-          <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="d-flex justify-between align-center mb-4">
+            <Header
+              title="My Note Requests"
+              subtitle="Track your submitted note requests"
+            />
             <button
-              className="btn-primary"
+              className="btn btn-primary"
               onClick={() => window.location.href = '/upload'}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               <FiPlus /> New Request
             </button>
           </div>
 
+          {message && (
+            <div className={`alert ${message.includes('Error') ? 'alert-error' : 'alert-success'}`}>
+              {message}
+            </div>
+          )}
+
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '3rem' }}>
-              <div className="spinner"></div>
+            <div className="text-center p-5">
+              <div className="spinner mx-auto"></div>
               <p>Loading your requests...</p>
             </div>
           ) : requests.length > 0 ? (
@@ -221,9 +202,9 @@ const Requests = ({ onLogout }) => {
                     <div className="teacher-feedback">
                       <strong>Teacher's Feedback:</strong> {request.teacherMessage}
                       {request.reviewedBy && (
-                        <span style={{ marginLeft: '10px' }}>
+                        <div className="mt-2 text-sm d-flex align-center gap-2">
                           <FiUser /> Reviewed by: {request.reviewedBy.name}
-                        </span>
+                        </div>
                       )}
                     </div>
                   )}
@@ -237,8 +218,8 @@ const Requests = ({ onLogout }) => {
                     </button>
 
                     {request.status === 'approved' && (
-                      <span style={{ color: '#10b981', fontWeight: '600' }}>
-                        ✅ This note has been published to the library
+                      <span className="text-success font-bold d-flex align-center gap-2">
+                        <FiCheck /> This note has been published to the library
                       </span>
                     )}
                   </div>
@@ -248,116 +229,10 @@ const Requests = ({ onLogout }) => {
           ) : (
             <div className="empty-state">
               <p>You haven't submitted any note requests yet.</p>
-              <p>Use the "Upload Notes" feature to submit a request.</p>
+              <p>Use the "New Request" button to submit a request.</p>
             </div>
           )}
         </div>
-
-        <style jsx>{`
-          .request-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #3b82f6;
-          }
-          
-          .request-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-          }
-          
-          .request-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #1f2937;
-          }
-          
-          .request-description {
-            color: #6b7280;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-          }
-          
-          .request-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.8rem;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-          }
-          
-          .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #4b5563;
-          }
-          
-          .teacher-feedback {
-            background: #f9fafb;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border-left: 3px solid #f59e0b;
-          }
-          
-          .request-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
-          }
-          
-          .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-          }
-          
-          .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-          }
-          
-          .btn-secondary:hover {
-            background: #d1d5db;
-          }
-          
-          .empty-state {
-            text-align: center;
-            padding: 3rem;
-            background: white;
-            border-radius: 12px;
-            color: #6b7280;
-          }
-          
-          .spinner {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid #3b82f6;
-            border-top: 3px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-          }
-          
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -374,13 +249,7 @@ const Requests = ({ onLogout }) => {
         />
 
         {message && (
-          <div style={{
-            backgroundColor: message.includes('Error') ? '#fee2e2' : '#d1fae5',
-            color: message.includes('Error') ? '#dc2626' : '#065f46',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            marginBottom: '1.5rem'
-          }}>
+          <div className={`alert ${message.includes('Error') ? 'alert-error' : 'alert-success'}`}>
             {message}
           </div>
         )}
@@ -407,8 +276,8 @@ const Requests = ({ onLogout }) => {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <div className="spinner"></div>
+          <div className="text-center p-5">
+            <div className="spinner mx-auto"></div>
             <p>Loading requests...</p>
           </div>
         ) : requests.length > 0 ? (
@@ -418,7 +287,7 @@ const Requests = ({ onLogout }) => {
                 <div className="request-header">
                   <div>
                     <h3>{request.title}</h3>
-                    <p style={{ color: '#6b7280', fontSize: '0.9rem', marginTop: '4px' }}>
+                    <p className="text-sm text-secondary mt-1">
                       Requested by: <strong>{request.requestedBy?.name}</strong>
                       ({request.requestedBy?.email})
                     </p>
@@ -450,11 +319,10 @@ const Requests = ({ onLogout }) => {
                 )}
 
                 <div className="request-actions">
-                  <div>
+                  <div className="d-flex gap-2">
                     <button
                       className="btn btn-secondary"
                       onClick={() => window.open(`http://localhost:8000${request.fileUrl}`, '_blank')}
-                      style={{ marginRight: '10px' }}
                     >
                       <FiEye /> View File
                     </button>
@@ -465,7 +333,6 @@ const Requests = ({ onLogout }) => {
                           className="btn btn-success"
                           onClick={() => handleApprove(request._id)}
                           disabled={actionLoading === request._id}
-                          style={{ marginRight: '10px' }}
                         >
                           <FiCheck /> {actionLoading === request._id ? 'Approving...' : 'Approve'}
                         </button>
@@ -481,8 +348,8 @@ const Requests = ({ onLogout }) => {
                   </div>
 
                   {request.status === 'approved' && (
-                    <span style={{ color: '#10b981', fontWeight: '600' }}>
-                      ✅ Published to library
+                    <span className="text-success font-bold d-flex align-center gap-2">
+                      <FiCheck /> Published to library
                     </span>
                   )}
                 </div>
@@ -495,181 +362,6 @@ const Requests = ({ onLogout }) => {
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        .tabs {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          border-bottom: 2px solid #e5e7eb;
-          padding-bottom: 1rem;
-        }
-        
-        .tab-btn {
-          padding: 12px 24px;
-          background: transparent;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: #6b7280;
-          position: relative;
-          transition: all 0.2s;
-        }
-        
-        .tab-btn.active {
-          background: #3b82f6;
-          color: white;
-        }
-        
-        .tab-btn:hover:not(.active) {
-          background: #f3f4f6;
-        }
-        
-        .badge {
-          background: #ef4444;
-          color: white;
-          border-radius: 50%;
-          width: 20px;
-          height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.75rem;
-          margin-left: 6px;
-        }
-        
-        .btn-success {
-          background: #10b981;
-          color: white;
-        }
-        
-        .btn-success:hover:not(:disabled) {
-          background: #059669;
-        }
-        
-        .btn-danger {
-          background: #ef4444;
-          color: white;
-        }
-        
-        .btn-danger:hover:not(:disabled) {
-          background: #dc2626;
-        }
-        
-        .btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        
-        /* Reuse styles from student view */
-        .request-card {
-          background: white;
-          border-radius: 12px;
-          padding: 1.5rem;
-          margin-bottom: 1rem;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          border-left: 4px solid #3b82f6;
-        }
-        
-        .request-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-        
-        .request-header h3 {
-          margin: 0;
-          font-size: 1.2rem;
-          color: #1f2937;
-        }
-        
-        .request-description {
-          color: #6b7280;
-          margin-bottom: 1rem;
-          line-height: 1.5;
-        }
-        
-        .request-details {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 0.8rem;
-          margin-bottom: 1rem;
-          font-size: 0.9rem;
-        }
-        
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: #4b5563;
-        }
-        
-        .teacher-feedback {
-          background: #f9fafb;
-          padding: 1rem;
-          border-radius: 8px;
-          margin-bottom: 1rem;
-          border-left: 3px solid #f59e0b;
-        }
-        
-        .request-actions {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-top: 1rem;
-          border-top: 1px solid #e5e7eb;
-        }
-        
-        .btn {
-          padding: 8px 16px;
-          border: none;
-          border-radius: 6px;
-          font-weight: 600;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          transition: all 0.2s;
-        }
-        
-        .btn-secondary {
-          background: #e5e7eb;
-          color: #374151;
-        }
-        
-        .btn-secondary:hover {
-          background: #d1d5db;
-        }
-        
-        .empty-state {
-          text-align: center;
-          padding: 3rem;
-          background: white;
-          border-radius: 12px;
-          color: #6b7280;
-        }
-        
-        .spinner {
-          display: inline-block;
-          width: 30px;
-          height: 30px;
-          border: 3px solid #3b82f6;
-          border-top: 3px solid transparent;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1rem;
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 };

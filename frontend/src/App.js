@@ -7,6 +7,7 @@ import Requests from './pages/Requests';
 import Profile from './pages/Profile';
 import Colleges from './pages/Colleges';
 import Upload from './pages/Upload';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
   }
 
   return (
+    <ThemeProvider>
     <Router>
       <div className="App">
         <Routes>
@@ -115,6 +117,7 @@ function App() {
         </Routes>
       </div>
     </Router>
+    </ThemeProvider>
   );
 }
 

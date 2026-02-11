@@ -150,24 +150,14 @@ const UploadModal = ({ onClose, onSuccess }) => {
         </div>
 
         {error && (
-          <div
-            style={{
-              backgroundColor: "#fee2e2",
-              color: "#dc2626",
-              padding: "12px 16px",
-              borderRadius: "8px",
-              marginBottom: "1.5rem",
-              fontSize: "0.9rem",
-              borderLeft: "4px solid #dc2626",
-            }}
-          >
+          <div>
             ⚠️ {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group" style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+          <div className="form-group">
+            <label>
               Title *
             </label>
             <input
@@ -176,17 +166,12 @@ const UploadModal = ({ onClose, onSuccess }) => {
               value={formData.title}
               onChange={handleChange}
               required
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                border: "2px solid #e2e8f0",
-                borderRadius: "10px",
-              }}
+              
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+          <div className="form-group">
+            <label>
               Description
             </label>
             <textarea
@@ -194,18 +179,13 @@ const UploadModal = ({ onClose, onSuccess }) => {
               rows="3"
               value={formData.description}
               onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                border: "2px solid #e2e8f0",
-                borderRadius: "10px",
-              }}
+              
             />
           </div>
 
-          <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+          <div >
+            <div >
+              <label >
                 Subject *
               </label>
               <input
@@ -214,17 +194,12 @@ const UploadModal = ({ onClose, onSuccess }) => {
                 value={formData.subject}
                 onChange={handleChange}
                 required
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e2e8f0",
-                  borderRadius: "10px",
-                }}
+                
               />
             </div>
 
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <div >
+              <label >
                 Department *
               </label>
               <select
@@ -232,13 +207,7 @@ const UploadModal = ({ onClose, onSuccess }) => {
                 value={formData.department}
                 onChange={handleChange}
                 required
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e2e8f0",
-                  borderRadius: "10px",
-                  backgroundColor: "white",
-                }}
+                
               >
                 <option value="">Select Department</option>
                 {departments.map((dept) => (
@@ -250,9 +219,9 @@ const UploadModal = ({ onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+          <div>
+            <div>
+              <label>
                 Semester *
               </label>
               <select
@@ -260,13 +229,7 @@ const UploadModal = ({ onClose, onSuccess }) => {
                 value={formData.semester}
                 onChange={handleChange}
                 required
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e2e8f0",
-                  borderRadius: "10px",
-                  backgroundColor: "white",
-                }}
+                
               >
                 <option value="">Select Semester</option>
                 {semesters.map((sem) => (
@@ -277,8 +240,8 @@ const UploadModal = ({ onClose, onSuccess }) => {
               </select>
             </div>
 
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <div >
+              <label >
                 Type *
               </label>
               <select
@@ -286,13 +249,7 @@ const UploadModal = ({ onClose, onSuccess }) => {
                 value={formData.type}
                 onChange={handleChange}
                 required
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e2e8f0",
-                  borderRadius: "10px",
-                  backgroundColor: "white",
-                }}
+              
               >
                 <option value="note">Note</option>
                 <option value="pastpaper">Past Paper</option>
@@ -301,9 +258,9 @@ const UploadModal = ({ onClose, onSuccess }) => {
           </div>
 
           {formData.type === "pastpaper" && (
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <div>
+              <div>
+                <label>
                   Year
                 </label>
                 <input
@@ -313,30 +270,19 @@ const UploadModal = ({ onClose, onSuccess }) => {
                   onChange={handleChange}
                   min="2000"
                   max="2030"
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "2px solid #e2e8f0",
-                    borderRadius: "10px",
-                  }}
+                  
                 />
               </div>
 
-              <div style={{ flex: 1 }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              <div >
+                <label >
                   Exam Type
                 </label>
                 <select
                   name="examType"
                   value={formData.examType}
                   onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "2px solid #e2e8f0",
-                    borderRadius: "10px",
-                    backgroundColor: "white",
-                  }}
+                  
                 >
                   {examTypes.map((t) => (
                     <option key={t} value={t}>
@@ -348,49 +294,35 @@ const UploadModal = ({ onClose, onSuccess }) => {
             </div>
           )}
 
-          <div style={{ marginBottom: "2rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+          <div>
+            <label>
               File * (PDF / Images)
             </label>
 
             <div
-              style={{
-                border: "2px dashed #ddd",
-                borderRadius: "10px",
-                padding: "2rem",
-                textAlign: "center",
-                cursor: "pointer",
-                backgroundColor: file ? "#e8f5e9" : "#f8f9fa",
-              }}
+              
             >
               <input
                 type="file"
                 id="file-upload"
                 onChange={handleFileChange}
                 accept=".pdf,.png,.jpg,.jpeg"
-                style={{ display: "none" }}
+                
               />
-              <label htmlFor="file-upload" style={{ cursor: "pointer" }}>
+              <label htmlFor="file-upload">
                 <FiUpload size={32} color="#4361ee" />
-                <p style={{ marginTop: "1rem", fontWeight: "500" }}>
+                <p>
                   {file ? file.name : "Click to select file"}
                 </p>
               </label>
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+          <div>
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: "12px 24px",
-                background: "#e2e8f0",
-                border: "none",
-                borderRadius: "10px",
-                cursor: "pointer",
-                fontWeight: "600",
-              }}
+              
             >
               Cancel
             </button>
@@ -398,15 +330,7 @@ const UploadModal = ({ onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              style={{
-                padding: "12px 24px",
-                background: loading ? "#94a3b8" : "#4361ee",
-                color: "white",
-                border: "none",
-                borderRadius: "10px",
-                cursor: loading ? "not-allowed" : "pointer",
-                fontWeight: "600",
-              }}
+       
             >
               {loading ? "Submitting..." : "Submit Request"}
             </button>

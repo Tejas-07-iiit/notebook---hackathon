@@ -118,23 +118,23 @@ const Upload = ({ onLogout }) => {
                     subtitle={isStudent ? "Submit a note for review" : "Add new study material to library"}
                 />
 
-                <div className="content-padding">
-                    <div className="card" style={{ maxWidth: '800px', margin: '0 auto' }}>
+                <div className="mx-auto" style={{ maxWidth: '800px' }}>
+                    <div className="card">
 
                         {error && (
-                            <div className="error-message" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                            <div className="alert alert-error">
                                 <FiAlertCircle /> {error}
                             </div>
                         )}
 
                         {success && (
-                            <div className="success-message" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                            <div className="alert alert-success">
                                 <FiCheckCircle /> {success}
                             </div>
                         )}
 
                         <form onSubmit={handleSubmit}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className="d-grid grid-cols-2 gap-4">
 
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label>Title *</label>
@@ -192,26 +192,19 @@ const Upload = ({ onLogout }) => {
 
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label>File * (PDF, Images - Max 10MB)</label>
-                                    <div className="file-upload-area" style={{
-                                        border: '2px dashed #ddd',
-                                        padding: '30px',
-                                        textAlign: 'center',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        backgroundColor: file ? '#f0f9ff' : '#fafafa'
-                                    }}>
-                                        <input type="file" id="file-upload" onChange={handleFileChange} accept=".pdf,.png,.jpg,.jpeg" style={{ display: 'none' }} />
-                                        <label htmlFor="file-upload" style={{ cursor: 'pointer', width: '100%', display: 'block' }}>
-                                            <FiUpload size={40} color="#4a90e2" />
-                                            <p style={{ marginTop: '10px', color: '#666' }}>{file ? file.name : 'Click to upload file'}</p>
+                                    <div className={`file-upload-area ${file ? 'bg-primary-light' : ''}`}>
+                                        <input type="file" id="file-upload" onChange={handleFileChange} accept=".pdf,.png,.jpg,.jpeg" />
+                                        <label htmlFor="file-upload">
+                                            <FiUpload size={40} className="mb-2 text-primary" />
+                                            <p className="text-secondary">{file ? file.name : 'Click to upload file'}</p>
                                         </label>
                                     </div>
                                 </div>
 
                             </div>
 
-                            <div style={{ marginTop: '30px', textAlign: 'right' }}>
-                                <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '12px 30px' }}>
+                            <div className="mt-4 text-right">
+                                <button type="submit" className="btn btn-primary" disabled={loading}>
                                     {loading ? 'Uploading...' : (isStudent ? 'Submit Request' : 'Upload Note')}
                                 </button>
                             </div>

@@ -11,7 +11,7 @@ const StatsCard = ({ icon, value, label, color }) => {
 
   return (
     <div className="stat-card">
-      <div className="stat-icon" style={{ background: selectedColor.bg, color: selectedColor.color }}>
+      <div className="stat-icon">
         {icon}
       </div>
       <div className="stat-info">

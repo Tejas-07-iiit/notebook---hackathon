@@ -9,12 +9,7 @@ const user = userData ? JSON.parse(userData) : null;
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
+      <div>
         <div>Loading...</div>
       </div>
     );
