@@ -1066,7 +1066,7 @@ textarea.form-input {
   .request-header {
     flex-direction: column;
     gap: var(--spacing-md);
-  }
+  } 
 
   .request-actions {
     flex-direction: column;

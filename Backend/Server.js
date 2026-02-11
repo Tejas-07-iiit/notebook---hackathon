@@ -12,30 +12,31 @@ const app = express();
 
 // Fix CORS - Allow multiple origins
 const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
-  'http://localhost:3003'
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:3002",
+  "http://localhost:3003",
+  "https://notebook-render.vercel.app"
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-      console.log("CORS blocked origin:", origin);
-      return callback(new Error(msg), false);
+
+    // allow main vercel domain + preview deployments
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app")
+    ) {
+      return callback(null, true);
     }
-    
-    console.log("CORS allowed origin:", origin);
-    return callback(null, true);
+
+    console.log("CORS blocked origin:", origin);
+    return callback(new Error("Not allowed by CORS"), false);
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  credentials: true
 }));
+
 
 // Handle preflight requests
 app.options('*', cors());
