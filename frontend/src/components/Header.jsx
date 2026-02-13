@@ -1,12 +1,8 @@
-import React from 'react';
-import { FiBell, FiSearch, FiSun, FiMoon } from 'react-icons/fi';
-import { useTheme } from '../context/ThemeContext';
-
+import { FiSearch } from 'react-icons/fi';
 const Header = ({ title, subtitle }) => {
   // Get user from localStorage
   const userData = localStorage.getItem('user');
   const user = userData ? JSON.parse(userData) : null;
-  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="header">
