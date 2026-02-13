@@ -51,7 +51,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     width: 100%;
-    max-width: 420px;
+    max-width: 650px;
     padding: 40px;
     border-radius: var(--radius);
     border: 1px solid var(--glass-border);
@@ -1886,6 +1886,7 @@ strong {
     /* Rose-400 */
     border-color: rgba(244, 63, 94, 0.2);
 }
+
 /* --- Mobile Responsive Fix (Moved to end for specificity) --- */
 @media (max-width: 768px) {
     .dashboard-container {
@@ -1893,7 +1894,8 @@ strong {
     }
 
     .main-content {
-        padding: 20px 20px 100px 20px; /* Added bottom padding for nav bar */
+        padding: 20px 20px 100px 20px;
+        /* Added bottom padding for nav bar */
         margin-left: 0;
     }
 
@@ -1910,8 +1912,8 @@ strong {
         border-right: none;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         justify-content: flex-start;
-        background: rgba(15, 23, 42, 0.98); 
-        box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        background: rgba(15, 23, 42, 0.98);
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
         overflow-x: auto;
         gap: 10px;
         z-index: 9999;
@@ -1919,7 +1921,7 @@ strong {
     }
 
     .sidebar .logo {
-        display: none !important; 
+        display: none !important;
     }
 
     .nav-links {
@@ -1943,23 +1945,23 @@ strong {
         align-items: center;
         width: auto !important;
     }
-    
+
     .nav-icon {
         font-size: 1.4rem;
         margin-bottom: 2px;
     }
-    
+
     .sidebar-footer {
-        display: flex !important; 
+        display: flex !important;
         flex-direction: row !important;
         gap: 5px;
         padding-top: 0;
         border-top: none;
         margin-top: 0;
-        padding-left: 10px; 
-        border-left: 1px solid rgba(255, 255, 255, 0.1); 
+        padding-left: 10px;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
+
     .sidebar-footer .nav-item {
         width: auto !important;
     }
@@ -1967,16 +1969,16 @@ strong {
     /* Adjust hover/active states for touch */
     .nav-item:hover {
         transform: none;
-        background: rgba(255, 255, 255, 0.05); 
+        background: rgba(255, 255, 255, 0.05);
     }
-    
+
     .nav-item.active {
         background: transparent;
         color: var(--primary);
         box-shadow: none;
         border: none;
     }
-    
+
     .nav-item.active .nav-icon {
         color: var(--primary);
         transform: translateY(-2px);
@@ -1999,7 +2001,7 @@ strong {
     }
 
     .main-content {
-        margin-left: 0; 
+        margin-left: 0;
         /* Sidebar is sticky/fixed, but usually in this layout it takes up space. 
            If sidebar is sticky top:0, main content needs margin if it's not flex.
            However, .dashboard-container is flex row by default. 
@@ -2007,9 +2009,10 @@ strong {
     }
 
     .nav-item span {
-        display: inline-block !important; /* Force text visibility */
+        display: inline-block !important;
+        /* Force text visibility */
     }
-    
+
     .logo span {
         display: inline-block !important;
     }
