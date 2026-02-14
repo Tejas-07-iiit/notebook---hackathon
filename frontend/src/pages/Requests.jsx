@@ -2,22 +2,31 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import api from '../services/api';
-import { FiPlus, FiClock, FiCheck, FiX, FiEye, FiUser, FiCalendar, FiBook } from 'react-icons/fi';
+import { FiPlus, FiClock, FiCheck, FiX, FiEye, FiUser, FiCalendar, FiBook, FiMessageSquare } from 'react-icons/fi';
 
 const Requests = ({ onLogout }) => {
   // Get user from localStorage
   const userData = localStorage.getItem('user');
   const user = userData ? JSON.parse(userData) : null;
 
+  const capitalize = (s) => {
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
   const [activeTab, setActiveTab] = useState('pending');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [message, setMessage] = useState('');
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   const fetchRequests = React.useCallback(async () => {
     try {
       setLoading(true);
+      setRejectingId(null);
+      setRejectReason('');
       let endpoint;
 
       if (user?.role === 'student') {
@@ -67,10 +76,10 @@ const Requests = ({ onLogout }) => {
     }
   };
 
-  const handleReject = async (id) => {
-    const reason = prompt('Please enter rejection reason:');
+  // This version of reject handler expects the reason already collected
+  const handleReject = async (id, reason) => {
     if (!reason || reason.trim() === '') {
-      alert('Rejection reason is required');
+      setMessage('Rejection reason is required');
       return;
     }
 
@@ -84,6 +93,8 @@ const Requests = ({ onLogout }) => {
       console.log('Rejection response:', response);
 
       setMessage('Request rejected successfully!');
+      setRejectingId(null);
+      setRejectReason('');
       fetchRequests(); // Refresh the list
 
     } catch (error) {
@@ -148,8 +159,8 @@ const Requests = ({ onLogout }) => {
             subtitle="Track your submitted note requests"
           />
 
-          <div className="d-flex justify-between align-center mb-4">
-            <h2 className="text-xl font-bold">My Requests</h2>
+          <div className="d-flex justify-between align-center mb-4" style={{ maxWidth: '800px' }}>
+            <div className="flex-grow"></div>
             <button
               className="btn btn-primary" style={{ width: "208px" }}
               onClick={() => window.location.href = '/upload'}
@@ -195,6 +206,11 @@ const Requests = ({ onLogout }) => {
                         <strong>Year:</strong> {request.year}
                       </div>
                     )}
+                    {request.examType && (
+                      <div className="detail-item">
+                        <strong>Exam Type:</strong> {request.examType}
+                      </div>
+                    )}
                     <div className="detail-item">
                       <FiCalendar /> <strong>Submitted:</strong> {formatDate(request.createdAt)}
                     </div>
@@ -202,10 +218,14 @@ const Requests = ({ onLogout }) => {
 
                   {request.status !== 'pending' && request.teacherMessage && (
                     <div className="teacher-feedback">
-                      <strong>Teacher's Feedback:</strong> {request.teacherMessage}
+                      <strong><FiMessageSquare style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Teacher's Feedback:</strong>
+                      {request.teacherMessage}
                       {request.reviewedBy && (
-                        <div className="mt-2 text-sm d-flex align-center gap-2">
-                          <FiUser /> Reviewed by: {request.reviewedBy.name}
+                        <div className="mt-2 text-sm d-flex align-center gap-2" style={{ marginTop: '10px', opacity: 0.8 }}>
+                          <FiUser /> Reviewed by:{' '}
+                          {typeof request.reviewedBy === 'string'
+                            ? request.reviewedBy
+                            : request.reviewedBy.name || request.reviewedBy._id || ''}
                         </div>
                       )}
                     </div>
@@ -219,14 +239,13 @@ const Requests = ({ onLogout }) => {
                       <FiEye /> View File
                     </button>
 
-                    {request.status === 'approved' && (
+                    {request.status === 'approved' && !request.teacherMessage && (
                       <span className="text-success font-bold d-flex align-center gap-2">
                         <FiCheck /> This note has been published to the library
                       </span>
                     )}
                   </div>
-                </div>
-              ))}
+                </div>))}
             </div>
           ) : (
             <div className="empty-state">
@@ -245,10 +264,12 @@ const Requests = ({ onLogout }) => {
       <Sidebar onLogout={onLogout} />
 
       <div className="main-content">
-        <Header
-          title="Note Requests"
-          subtitle="Review and manage student note requests"
-        />
+        <div style={{ maxWidth: '800px' }}>
+          <Header
+            title="Note Requests"
+            subtitle="Review and manage student note requests"
+          />
+        </div>
 
         {message && (
           <div className={`alert ${message.includes('Error') ? 'alert-error' : 'alert-success'}`}>
@@ -257,7 +278,7 @@ const Requests = ({ onLogout }) => {
         )}
 
         {/* Tabs for Teacher/Admin */}
-        <div className="tabs">
+        <div className="tabs" style={{ maxWidth: '800px' }}>
           <button
             className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
             onClick={() => setActiveTab('pending')}
@@ -288,13 +309,17 @@ const Requests = ({ onLogout }) => {
               <div key={request._id} className="request-card">
                 <div className="request-header">
                   <div>
-                    <h3>{request.title}</h3>
+                    <h3>{capitalize(request.title)}</h3>
                     <p className="text-sm text-secondary mt-1">
                       Requested by: <strong>{request.requestedBy?.name}</strong>
-                      ({request.requestedBy?.email})
                     </p>
                   </div>
-                  {getStatusBadge(request.status)}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    {getStatusBadge(request.status)}
+                    <p className="text-sm text-secondary">
+                      {request.requestedBy?.email}
+                    </p>
+                  </div>
                 </div>
 
                 <p className="request-description">{request.description}</p>
@@ -309,6 +334,16 @@ const Requests = ({ onLogout }) => {
                   <div className="detail-item">
                     <strong>Department:</strong> {request.department}
                   </div>
+                  {request.year && (
+                    <div className="detail-item">
+                      <strong>Year:</strong> {request.year}
+                    </div>
+                  )}
+                  {request.examType && (
+                    <div className="detail-item">
+                      <strong>Exam Type:</strong> {request.examType}
+                    </div>
+                  )}
                   <div className="detail-item">
                     <FiCalendar /> <strong>Submitted:</strong> {formatDate(request.createdAt)}
                   </div>
@@ -316,7 +351,8 @@ const Requests = ({ onLogout }) => {
 
                 {request.status !== 'pending' && request.teacherMessage && (
                   <div className="teacher-feedback">
-                    <strong>Your Feedback:</strong> {request.teacherMessage}
+                    <strong><FiMessageSquare style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Your Feedback:</strong>
+                    {request.teacherMessage}
                   </div>
                 )}
 
@@ -338,13 +374,41 @@ const Requests = ({ onLogout }) => {
                         >
                           <FiCheck /> {actionLoading === request._id ? 'Approving...' : 'Approve'}
                         </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => handleReject(request._id)}
-                          disabled={actionLoading === request._id}
-                        >
-                          <FiX /> {actionLoading === request._id ? 'Rejecting...' : 'Reject'}
-                        </button>
+                        {rejectingId === request._id ? (
+                          <div className="reject-form" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <input
+                              type="text"
+                              placeholder="Rejection reason"
+                              value={rejectReason}
+                              onChange={e => setRejectReason(e.target.value)}
+                              disabled={actionLoading === request._id}
+                              className="input"
+                              style={{ minWidth: '200px' }}
+                            />
+                            <button
+                              className="btn btn-danger"
+                              onClick={() => handleReject(request._id, rejectReason)}
+                              disabled={actionLoading === request._id}
+                            >
+                              <FiX /> {actionLoading === request._id ? 'Rejecting...' : 'Confirm'}
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => { setRejectingId(null); setRejectReason(''); }}
+                              disabled={actionLoading === request._id}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => setRejectingId(request._id)}
+                            disabled={actionLoading === request._id}
+                          >
+                            <FiX /> {actionLoading === request._id ? 'Rejecting...' : 'Reject'}
+                          </button>
+                        )}
                       </>
                     )}
                   </div>

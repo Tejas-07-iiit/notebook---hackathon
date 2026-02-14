@@ -8,6 +8,7 @@
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --text-main: #f8fafc;
+    --text-dark: #1f2937;
     --text-muted: #94a3b8;
     --error: #fb7185;
     --success: #34d399;
@@ -159,10 +160,33 @@
     box-shadow: 0 10px 15px -3px var(--primary-glow);
 }
 
+
 .btn-primary:hover {
     transform: translateY(-2px);
     filter: brightness(1.1);
     box-shadow: 0 15px 25px -5px var(--primary-glow);
+}
+
+/* --- Success Button (Approve) --- */
+.btn-success {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(52, 211, 153, 0.4);
+    filter: brightness(1.1);
 }
 
 /* --- Alerts & Helpers --- */
@@ -1387,6 +1411,20 @@ strong {
     text-align: center;
 }
 
+
+.gap-2 {
+    gap: 8px;
+}
+
+.gap-3 {
+    gap: 12px;
+}
+
+.gap-4 {
+    gap: 16px;
+}
+
+/* --- Spinner --- */
 .spinner {
     width: 30px;
     height: 30px;
@@ -1847,23 +1885,83 @@ strong {
 
 /* --- Teacher Feedback & Alerts --- */
 .teacher-feedback {
-    background: rgba(245, 158, 11, 0.1);
-    /* Amber tint */
-    border: 1px solid rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
-    /* Amber-400 text for readability */
-    padding: 16px;
-    border-radius: 12px;
-    margin-top: 16px;
-    line-height: 1.6;
+    background: rgba(245, 158, 11, 0.05);
+    /* Amber tint with very low opacity */
+    border-left: 4px solid #f59e0b;
+    padding: 16px 20px;
+    border-radius: 4px;
+    /* Slightly sharper styling for alert look */
+    margin-top: 20px;
+    color: var(--text-muted);
+    position: relative;
+    overflow: hidden;
 }
 
 .teacher-feedback strong {
-    color: #fcd34d;
-    /* Amber-300 title */
+    color: #fbbf24;
+    /* Amber-400 */
     display: block;
-    margin-bottom: 4px;
-    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.teacher-feedback::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+/* tabs for teacher admin request review */
+.tabs {
+    display: flex;
+    gap: 12px;
+    margin: 1rem 0;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--primary);
+    background: transparent;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    color: white;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.tab-btn.active,
+.tab-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.tab-btn .badge {
+    margin-left: 6px;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+}
+
+.reject-form .input {
+    padding: 6px 10px;
+    border: 1px solid var(--secondary);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* ensure buttons inside reject form are slightly smaller */
+.reject-form .btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
 }
 
 .alert {
@@ -1886,6 +1984,87 @@ strong {
     color: #fb7185;
     /* Rose-400 */
     border-color: rgba(244, 63, 94, 0.2);
+}
+
+/* styling for request cards */
+.request-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    color: var(--text-main);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.request-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
+.request-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.4;
+}
+
+.request-description {
+    margin: 16px 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.6;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+}
+
+.request-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.request-details .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.request-details .detail-item strong {
+    color: var(--text-main);
+}
+
+.request-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+/* contain list width so cards don't stretch the full viewport */
+.requests-list {
+    max-width: 800px;
+    margin-left: 0;
 }
 
 /* --- Mobile Responsive Fix (Moved to end for specificity) --- */
@@ -1977,14 +2156,17 @@ strong {
     .sidebar::-webkit-scrollbar {
         height: 4px;
     }
+
     .sidebar::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.05);
         border-radius: 4px;
     }
+
     .sidebar::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.3);
         border-radius: 4px;
     }
+
     .sidebar::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.5);
     }
@@ -2014,14 +2196,17 @@ strong {
 .sidebar::-webkit-scrollbar {
     width: 4px;
 }
+
 .sidebar::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
 }
+
 .sidebar::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.3);
     border-radius: 4px;
 }
+
 .sidebar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
 }
