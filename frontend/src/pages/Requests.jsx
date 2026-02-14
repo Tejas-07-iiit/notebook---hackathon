@@ -162,7 +162,7 @@ const Requests = ({ onLogout }) => {
           <div className="d-flex justify-between align-center mb-4" style={{ maxWidth: '800px' }}>
             <div className="flex-grow"></div>
             <button
-              className="btn btn-primary" style={{ width: "208px" }}
+              className="btn btn-primary" style={{ width: "208px", marginBottom: "24px" }}
               onClick={() => window.location.href = '/upload'}
             >
               <FiPlus /> New Request

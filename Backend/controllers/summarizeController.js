@@ -2,7 +2,7 @@ const OpenAI = require("openai");
 const Note = require("../Models/Note.model");
 const fs = require("fs");
 const path = require("path");
-const pdf = require("pdf-parse");
+// const pdf = require("pdf-parse"); // access locally to handle version differences
 
 const summarizeNotes = async (req, res) => {
     try {
@@ -50,8 +50,45 @@ const summarizeNotes = async (req, res) => {
             if (fs.existsSync(filePath)) {
                 if (ext === '.pdf') {
                     const dataBuffer = fs.readFileSync(filePath);
-                    const data = await pdf(dataBuffer);
-                    notes = data.text;
+
+                    // pdf-parse v2.4.5 usage
+                    // It exports an object with PDFParse class
+                    const pdfLibrary = require("pdf-parse");
+                    const PDFParse = pdfLibrary.PDFParse || pdfLibrary.default?.PDFParse || pdfLibrary;
+
+                    if (typeof PDFParse !== 'function' && typeof PDFParse !== 'object') {
+                        console.error('Invalid pdf-parse library export:', pdfLibrary);
+                        throw new Error('Internal Server Error: pdf-parse library failed to load.');
+                    }
+
+                    // Check if it's the class (v2) or function (v1 fallback/compatibility)
+                    // The class constructor usually requires "new"
+                    let notesText = "";
+
+                    try {
+                        // Try v2 API: new PDFParse({ data: buffer })
+                        // We check if it is a class/constructor by trying to instantiate it
+                        // or checking prototype. But safer to just try/catch if uncertain, 
+                        // however README says v2 is: const { PDFParse } = require('pdf-parse'); 
+                        // MY debug output showed: PDFParse: [class (anonymous)]
+
+                        const parser = new PDFParse({ data: dataBuffer });
+                        const result = await parser.getText();
+                        notesText = result.text;
+                        if (parser.destroy) await parser.destroy();
+
+                    } catch (e) {
+                        console.warn("Class-based instantiation failed, trying legacy function call...", e);
+                        // Fallback to v1 style if for some reason it's a function
+                        if (typeof PDFParse === 'function') {
+                            const data = await PDFParse(dataBuffer);
+                            notesText = data.text;
+                        } else {
+                            throw e;
+                        }
+                    }
+
+                    notes = notesText;
                     console.log(`Extracted ${notes.length} characters from PDF`);
 
                     if (!notes || notes.trim().length === 0) {
