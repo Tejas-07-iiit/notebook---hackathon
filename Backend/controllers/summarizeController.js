@@ -1,8 +1,6 @@
 const OpenAI = require("openai");
 const Note = require("../Models/Note.model");
-const fs = require("fs").promises;
-const path = require("path");
-// const pdf = require("pdf-parse"); // access locally to handle version differences
+const axios = require("axios");
 
 const summarizeNotes = async (req, res) => {
     try {
@@ -17,58 +15,23 @@ const summarizeNotes = async (req, res) => {
                 return res.status(404).json({ message: "Note not found" });
             }
 
-            // Check if it's a file path or URL
-            console.log(note)
-            let filePath = note.fileUrl;
-
-            // If content is stored locally in uploads directory
-            if (!filePath.startsWith("http") && !path.isAbsolute(filePath)) {
-                // Try to resolve relative to root of backend
-                let relativePath = filePath;
-                if (relativePath.startsWith('/')) {
-                    relativePath = relativePath.substring(1); // Remove leading slash
-                }
-
-                // Construct absolute path: __dirname is 'controllers', so we go up one level to 'Backend'
-                filePath = path.join(__dirname, "..", relativePath);
-            } else if (filePath.startsWith('/')) {
-                // Even if it starts with /, on Linux it might be treated as absolute root.
-                // We check if it exists. If not, try relative to Backend root.
-                let relativePath = filePath.substring(1);
-                const potentialPath = path.join(__dirname, "..", relativePath);
-
-                try {
-                    await fs.access(filePath);
-                } catch (e) {
-                    // filePath doesn't exist, try potentialPath
-                    try {
-                        await fs.access(potentialPath);
-                        filePath = potentialPath;
-                    } catch (e2) {
-                        // path doesn't exist
-                    }
-                }
-            }
-
-            console.log(`Processing file: ${filePath}`);
-            console.log(`Original fileUrl: ${note.fileUrl}`);
-            console.log(`Resolved absolute path: ${path.resolve(filePath)}`);
-            const ext = path.extname(filePath).toLowerCase();
+            console.log(`Processing file URL: ${note.fileUrl}`);
+            const fileUrl = note.fileUrl; // This is now a Cloudinary URL
 
             try {
-                await fs.access(filePath);
+                // Fetch the file content from Cloudinary
+                console.log("Fetching file from Cloudinary...");
+                const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+                const dataBuffer = Buffer.from(response.data);
 
-                if (ext === '.pdf') {
-                    const dataBuffer = await fs.readFile(filePath);
+                // Determine extension from URL if possible, or content-type
+                // Cloudinary URLs usually have extension. 
+                const isPdf = fileUrl.toLowerCase().endsWith('.pdf') || response.headers['content-type'] === 'application/pdf';
 
-                    // pdf-parse v2.4.5 usage
+                if (isPdf) {
+                    // pdf-parse usage
                     const pdfLibrary = require("pdf-parse");
                     const PDFParse = pdfLibrary.PDFParse || pdfLibrary.default?.PDFParse || pdfLibrary;
-
-                    if (typeof PDFParse !== 'function' && typeof PDFParse !== 'object') {
-                        console.error('Invalid pdf-parse library export:', pdfLibrary);
-                        throw new Error('Internal Server Error: pdf-parse library failed to load.');
-                    }
 
                     let notesText = "";
 
@@ -77,10 +40,8 @@ const summarizeNotes = async (req, res) => {
                         const result = await parser.getText();
                         notesText = result.text;
                         if (parser.destroy) await parser.destroy();
-
                     } catch (e) {
                         console.warn("Class-based instantiation failed, trying legacy function call...", e);
-                        // Fallback to v1 style if for some reason it's a function
                         if (typeof PDFParse === 'function') {
                             const data = await PDFParse(dataBuffer);
                             notesText = data.text;
@@ -95,15 +56,15 @@ const summarizeNotes = async (req, res) => {
                     if (!notes || notes.trim().length === 0) {
                         return res.status(400).json({ message: "Could not extract text from this PDF. It might be an image-only PDF." });
                     }
-                } else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
-                    // Image Summarization Disabled: Models are decommissioned
-                    console.log(`Skipping image file: ${ext}`);
+                } else {
+                    // Assume image or other format
+                    console.log("Skipping non-PDF file for summarization");
                     return res.status(200).json({ summary: "Image summarization is currently unavailable as the vision models have been decommissioned." });
-
                 }
+
             } catch (err) {
-                console.warn(`File not found at path: ${filePath}`);
-                return res.status(404).json({ message: "Note file not found on server" });
+                console.error("Error fetching or processing file from Cloudinary:", err.message);
+                return res.status(500).json({ message: "Error processing file for summarization", error: err.message });
             }
         }
 
@@ -130,7 +91,7 @@ const summarizeNotes = async (req, res) => {
         const maxLength = 25000;
         const truncatedNotes = notes.length > maxLength ? notes.substring(0, maxLength) + "...[truncated]" : notes;
 
-        const response = await client.chat.completions.create({
+        const chatResponse = await client.chat.completions.create({
             model: "llama-3.3-70b-versatile",
             messages: [
                 {
@@ -144,7 +105,7 @@ const summarizeNotes = async (req, res) => {
             ],
         });
 
-        const summary = response.choices[0]?.message?.content || "No summary generated.";
+        const summary = chatResponse.choices[0]?.message?.content || "No summary generated.";
         console.log("Summary generated successfully");
 
         res.status(200).json({ summary });

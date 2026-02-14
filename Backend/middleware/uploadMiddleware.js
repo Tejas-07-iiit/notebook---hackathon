@@ -1,39 +1,16 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const cloudinary = require("../config/cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-console.log("📁 Setting up upload middleware...");
+console.log("📁 Setting up upload middleware with Cloudinary...");
 
-// Create uploads directory if it doesn't exist
-const uploadDir = "uploads";
-const fullPath = path.join(__dirname, '..', uploadDir);
-console.log("Upload directory path:", fullPath);
-
-if (!fs.existsSync(fullPath)) {
-  console.log("📂 Creating uploads directory...");
-  try {
-    fs.mkdirSync(fullPath, { recursive: true });
-    console.log("✅ Uploads directory created:", fullPath);
-  } catch (err) {
-    console.error("❌ Failed to create uploads directory:", err);
-  }
-} else {
-  console.log("✅ Uploads directory exists");
-  console.log("Directory contents:", fs.readdirSync(fullPath));
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    console.log("💾 Saving file to:", uploadDir);
-    cb(null, uploadDir);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "notebook-uploads", // Folder name in Cloudinary
+    allowed_formats: ["jpg", "png", "jpeg", "pdf"],
+    resource_type: "auto", // Handle raw files like PDF
   },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const extension = path.extname(file.originalname);
-    const filename = uniqueName + extension;
-    console.log("📄 Generated filename:", filename, "for original:", file.originalname);
-    cb(null, filename);
-  }
 });
 
 const fileFilter = (req, file, cb) => {
@@ -42,7 +19,7 @@ const fileFilter = (req, file, cb) => {
     mimetype: file.mimetype,
     size: file.size
   });
-  
+
   const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/jpg"];
   if (!allowedTypes.includes(file.mimetype)) {
     console.log("❌ File type not allowed:", file.mimetype);
@@ -52,14 +29,14 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-const upload = multer({ 
-  storage, 
+const upload = multer({
+  storage,
   fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
   }
 });
 
-console.log("✅ Upload middleware configured");
+console.log("✅ Upload middleware configured for Cloudinary");
 
 module.exports = upload;
