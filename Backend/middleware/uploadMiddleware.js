@@ -1,16 +1,39 @@
 const multer = require("multer");
-const cloudinary = require("../config/cloudinary");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const path = require("path");
+const fs = require("fs");
 
-console.log("📁 Setting up upload middleware with Cloudinary...");
+console.log("📁 Setting up upload middleware...");
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "notebook-uploads", // Folder name in Cloudinary
-    allowed_formats: ["jpg", "png", "jpeg", "pdf"],
-    resource_type: "auto", // Handle raw files like PDF
+// Create uploads directory if it doesn't exist
+const uploadDir = "uploads";
+const fullPath = path.join(__dirname, '..', uploadDir);
+console.log("Upload directory path:", fullPath);
+
+if (!fs.existsSync(fullPath)) {
+  console.log("📂 Creating uploads directory...");
+  try {
+    fs.mkdirSync(fullPath, { recursive: true });
+    console.log("✅ Uploads directory created:", fullPath);
+  } catch (err) {
+    console.error("❌ Failed to create uploads directory:", err);
+  }
+} else {
+  console.log("✅ Uploads directory exists");
+  console.log("Directory contents:", fs.readdirSync(fullPath));
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    console.log("💾 Saving file to:", uploadDir);
+    cb(null, uploadDir);
   },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    const filename = uniqueName + extension;
+    console.log("📄 Generated filename:", filename, "for original:", file.originalname);
+    cb(null, filename);
+  }
 });
 
 const fileFilter = (req, file, cb) => {
@@ -37,6 +60,6 @@ const upload = multer({
   }
 });
 
-console.log("✅ Upload middleware configured for Cloudinary");
+console.log("✅ Upload middleware configured for local storage");
 
 module.exports = upload;

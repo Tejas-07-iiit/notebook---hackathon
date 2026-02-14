@@ -1,5 +1,7 @@
 const Note = require("../Models/Note.model");
-const cloudinary = require("../config/cloudinary");
+const path = require("path");
+const fs = require("fs").promises; // Use fs.promises
+const fsSync = require("fs"); // Keep fsSync for constants or streams if needed (e.g. createReadStream)
 
 exports.uploadNote = async (req, res) => {
   console.log("======= UPLOAD NOTE START =======");
@@ -7,13 +9,13 @@ exports.uploadNote = async (req, res) => {
 
   try {
     console.log("📝 Request body:", JSON.stringify(req.body, null, 2));
-
-    // Cloudinary upload info is in req.file
     console.log("📎 Uploaded file info:", req.file ? {
-      filename: req.file.filename, // This is the public_id in Cloudinary
-      path: req.file.path, // This is the Cloudinary URL
+      filename: req.file.filename,
+      originalname: req.file.originalname,
       mimetype: req.file.mimetype,
-      size: req.file.size
+      size: req.file.size,
+      path: req.file.path,
+      destination: req.file.destination
     } : 'NO FILE');
 
     console.log("👤 User making request:", req.user ? {
@@ -22,6 +24,16 @@ exports.uploadNote = async (req, res) => {
       role: req.user.role,
       collegeId: req.user.collegeId
     } : 'NO USER');
+
+    // Check if file exists (Async)
+    if (req.file && req.file.path) {
+      try {
+        await fs.access(req.file.path);
+        console.log(`📁 File exists on disk at ${req.file.path}`);
+      } catch (e) {
+        console.log(`⚠️ File does NOT exist on disk at ${req.file.path}`);
+      }
+    }
 
     const { title, description, subject, department, semester, type, year, examType } = req.body;
 
@@ -37,14 +49,14 @@ exports.uploadNote = async (req, res) => {
     if (!title || !subject || !department || !semester) {
       console.log("❌ ERROR: Missing required fields");
 
-      // Delete the uploaded file from Cloudinary if validation fails
-      if (req.file && req.file.filename) {
-        console.log("🗑️ Deleting uploaded file from Cloudinary due to validation failure...");
+      // Delete the uploaded file if validation fails
+      if (req.file.path) {
+        console.log("🗑️ Deleting uploaded file due to validation failure...");
         try {
-          await cloudinary.uploader.destroy(req.file.filename);
-          console.log("✅ File deleted successfully from Cloudinary");
+          await fs.unlink(req.file.path);
+          console.log("✅ File deleted successfully");
         } catch (err) {
-          console.error("Error deleting file from Cloudinary:", err);
+          console.error("Error deleting file:", err);
         }
       }
 
@@ -61,7 +73,7 @@ exports.uploadNote = async (req, res) => {
 
     console.log("✅ All validations passed");
 
-    const fileUrl = req.file.path; // Cloudinary URL
+    const fileUrl = `/uploads/${req.file.filename}`;
     console.log("🔗 File URL for access:", fileUrl);
 
     console.log("💾 Creating note in database...");
@@ -80,33 +92,55 @@ exports.uploadNote = async (req, res) => {
     });
 
     console.log("✅ Note created successfully with ID:", note._id);
+    console.log("📊 Note details:", {
+      id: note._id,
+      title: note.title,
+      subject: note.subject,
+      fileUrl: note.fileUrl
+    });
 
     console.log("======= UPLOAD NOTE SUCCESS =======");
 
     res.status(201).json({
       message: "Note uploaded successfully",
       note,
-      fileUrl // Return full URL
+      fileUrl: `${req.protocol}://${req.get('host')}${fileUrl}` // Return full URL dynamically
     });
 
   } catch (err) {
     console.error("❌ ======= UPLOAD NOTE ERROR =======");
-    console.error("Error:", err);
+    console.error("Error name:", err.name);
+    console.error("Error message:", err.message);
+    console.error("Error code:", err.code);
+    console.error("Error stack:", err.stack);
 
-    // Delete the uploaded file from Cloudinary if there's an error
-    if (req.file && req.file.filename) {
-      console.log("🗑️ Attempting to delete uploaded file from Cloudinary after error...");
+    if (err.name === 'ValidationError') {
+      console.error("Mongoose validation errors:", err.errors);
+    }
+
+    if (err.name === 'MongoError') {
+      console.error("MongoDB error code:", err.code);
+    }
+
+    console.error("Full error object:", JSON.stringify(err, null, 2));
+    console.error("======= UPLOAD NOTE END =======");
+
+    // Delete the uploaded file if there's an error
+    if (req.file && req.file.path) {
+      console.log("🗑️ Attempting to delete uploaded file after error...");
       try {
-        await cloudinary.uploader.destroy(req.file.filename);
-        console.log("✅ File deleted from Cloudinary");
+        await fs.unlink(req.file.path);
+        console.log("✅ File deleted after error");
       } catch (unlinkErr) {
-        console.error("Error deleting file from Cloudinary:", unlinkErr);
+        console.error("Error deleting file:", unlinkErr);
       }
     }
 
     res.status(500).json({
       message: "Error uploading note",
-      error: err.message
+      error: err.message,
+      errorType: err.name,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
   }
 };
@@ -159,38 +193,41 @@ exports.deleteNote = async (req, res) => {
     const note = await Note.findById(req.params.id);
 
     if (!note) {
+      console.log("❌ Note not found");
       return res.status(404).json({ message: "Note not found" });
     }
 
+    console.log("Found note:", {
+      id: note._id,
+      title: note.title,
+      uploadedBy: note.uploadedBy,
+      currentUser: req.user._id,
+      currentUserRole: req.user.role
+    });
+
+    // Check permission
     if (req.user.role !== "teacher") {
+      console.log("❌ User not authorized to delete");
       return res.status(403).json({ message: "Not authorized to delete notes" });
     }
 
-    // Delete from Cloudinary
+    console.log("✅ User authorized to delete");
+
+    // Delete the file from uploads directory
     if (note.fileUrl) {
-      // Extract public_id from Cloudinary URL
-      // URL format: https://res.cloudinary.com/cloud_name/image/upload/v12345/notebook-uploads/filename.pdf
-      // public_id needs to be including folder: notebook-uploads/filename
+      const filePath = path.join(__dirname, '..', note.fileUrl);
+      console.log("Looking for file at:", filePath);
+
       try {
-        const urlParts = note.fileUrl.split('/');
-        const filenameWithExt = urlParts.pop();
-        const folder = urlParts.pop(); // notebook-uploads
-        const publicId = `${folder}/${filenameWithExt.split('.')[0]}`; // remove extension for images, BUT check if Cloudinary needs extension for raw files? 
-        // For raw files (resource_type: auto/raw), sometimes it's tricky.
-        // Safer way: we should have stored public_id in DB, but we didn't. 
-        // We can try to guess or just leave it for now as strict requirement wasn't deleting from cloud perfectly.
-
-        // To properly delete, we usually need the exact public_id. 
-        // Let's try to delete using the filename (without extension usually).
-        // NOTE: req.file.filename usually gives the public_id from multer-storage-cloudinary.
-        // But we only stored fileUrl. 
-
-        console.log("Attempting to delete from Cloudinary (best effort)...");
-        // Note: This might not work perfectly without storing public_id explicitly, 
-        // but it won't break the app.
-      } catch (e) {
-        console.log("Error parsing Cloudinary URL:", e);
+        await fs.access(filePath);
+        console.log("✅ File exists, deleting...");
+        await fs.unlink(filePath);
+        console.log("✅ File deleted:", filePath);
+      } catch (err) {
+        console.log("⚠️ File not found at path or cannot delete:", filePath);
       }
+    } else {
+      console.log("⚠️ No fileUrl in note");
     }
 
     await note.deleteOne();
@@ -210,39 +247,29 @@ exports.deleteNote = async (req, res) => {
 exports.downloadNote = async (req, res) => {
   try {
     const filename = req.params.filename;
-    // With Cloudinary, we can't easily map "filename" back to a URL if we don't look it up in DB.
-    // But the frontend is passing the filename from the split URL. 
-    // Actually, if we use Cloudinary, the frontend should just use the `fileUrl` directly!
-    // The `downloadNote` endpoint was for local files. 
-    // WE SHOULD DEPRECATE THIS or make it a proxy.
-    // But since frontend uses it: /api/notes/download/:filename
+    const filePath = path.join(__dirname, '..', 'uploads', filename);
 
-    // We find the note by checking if any note has this filename in its URL
-    // This is inefficient.
-
-    // BETTER APPROACH: Frontend should just open `note.fileUrl` directly since it's a public Cloudinary URL.
-    // But I can't change frontend logic easily if I want to minimize changes.
-    // Wait, I CAN change frontend logic. I did it in the previous step.
-    // I changed it to: window.open(`${process.env.REACT_APP_API_URL}/api/notes/download/${filename}`, '_blank');
-
-    // So I should revert frontend to use note.fileUrl directly? 
-    // YES. That is much better for Cloudinary.
-
-    // However, to support the current request "fix this", I should probably make this endpoint redirect 
-    // if I can find the URL. But I don't have the URL if I only have filename.
-    // I would have to search the DB for a note with fileUrl containing this filename.
-
-    console.log("🔍 Searching for note with filename:", filename);
-    // Regex search for the filename at the end of fileUrl
-    const note = await Note.findOne({ fileUrl: { $regex: `${filename}$` } });
-
-    if (note && note.fileUrl) {
-      console.log("✅ Found note, redirecting to:", note.fileUrl);
-      return res.redirect(note.fileUrl);
+    // Security check: ensure path is within uploads directory
+    const resolvedPath = path.resolve(filePath);
+    const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+    if (!resolvedPath.startsWith(uploadsDir)) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
-    console.log("❌ Note not found for download");
-    res.status(404).json({ message: "File not found" });
+    try {
+      await fs.access(filePath);
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error("Error downloading file:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ message: "Error downloading file" });
+          }
+        }
+      });
+    } catch (err) {
+      console.error("File not found for download:", filePath);
+      res.status(404).json({ message: "File not found" });
+    }
 
   } catch (err) {
     console.error("Download error:", err);
