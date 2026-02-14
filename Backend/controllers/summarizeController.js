@@ -1,6 +1,6 @@
 const OpenAI = require("openai");
 const Note = require("../Models/Note.model");
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 // const pdf = require("pdf-parse"); // access locally to handle version differences
 
@@ -18,31 +18,35 @@ const summarizeNotes = async (req, res) => {
             }
 
             // Check if it's a file path or URL
-            // Assuming locally stored files in 'uploads/' based on common patterns
-            // If fileUrl is a full URL, we might need axios to download it.
-            // Based on typical multer usage, it might be a relative path or filename.
             console.log(note)
             let filePath = note.fileUrl;
 
             // If content is stored locally in uploads directory
             if (!filePath.startsWith("http") && !path.isAbsolute(filePath)) {
                 // Try to resolve relative to root of backend
-                // fileUrl usually stored as "/uploads/filename.pdf" or "uploads/filename.pdf"
                 let relativePath = filePath;
                 if (relativePath.startsWith('/')) {
                     relativePath = relativePath.substring(1); // Remove leading slash
                 }
 
                 // Construct absolute path: __dirname is 'controllers', so we go up one level to 'Backend'
-                // This covers both "uploads/file.pdf" and "/uploads/file.pdf" logic
                 filePath = path.join(__dirname, "..", relativePath);
-            } else if (filePath.startsWith('/') && !fs.existsSync(filePath)) {
+            } else if (filePath.startsWith('/')) {
                 // Even if it starts with /, on Linux it might be treated as absolute root.
                 // We check if it exists. If not, try relative to Backend root.
                 let relativePath = filePath.substring(1);
                 const potentialPath = path.join(__dirname, "..", relativePath);
-                if (fs.existsSync(potentialPath)) {
-                    filePath = potentialPath;
+
+                try {
+                    await fs.access(filePath);
+                } catch (e) {
+                    // filePath doesn't exist, try potentialPath
+                    try {
+                        await fs.access(potentialPath);
+                        filePath = potentialPath;
+                    } catch (e2) {
+                        // path doesn't exist
+                    }
                 }
             }
 
@@ -51,12 +55,13 @@ const summarizeNotes = async (req, res) => {
             console.log(`Resolved absolute path: ${path.resolve(filePath)}`);
             const ext = path.extname(filePath).toLowerCase();
 
-            if (fs.existsSync(filePath)) {
+            try {
+                await fs.access(filePath);
+
                 if (ext === '.pdf') {
-                    const dataBuffer = fs.readFileSync(filePath);
+                    const dataBuffer = await fs.readFile(filePath);
 
                     // pdf-parse v2.4.5 usage
-                    // It exports an object with PDFParse class
                     const pdfLibrary = require("pdf-parse");
                     const PDFParse = pdfLibrary.PDFParse || pdfLibrary.default?.PDFParse || pdfLibrary;
 
@@ -65,17 +70,9 @@ const summarizeNotes = async (req, res) => {
                         throw new Error('Internal Server Error: pdf-parse library failed to load.');
                     }
 
-                    // Check if it's the class (v2) or function (v1 fallback/compatibility)
-                    // The class constructor usually requires "new"
                     let notesText = "";
 
                     try {
-                        // Try v2 API: new PDFParse({ data: buffer })
-                        // We check if it is a class/constructor by trying to instantiate it
-                        // or checking prototype. But safer to just try/catch if uncertain, 
-                        // however README says v2 is: const { PDFParse } = require('pdf-parse'); 
-                        // MY debug output showed: PDFParse: [class (anonymous)]
-
                         const parser = new PDFParse({ data: dataBuffer });
                         const result = await parser.getText();
                         notesText = result.text;
@@ -104,7 +101,7 @@ const summarizeNotes = async (req, res) => {
                     return res.status(200).json({ summary: "Image summarization is currently unavailable as the vision models have been decommissioned." });
 
                 }
-            } else {
+            } catch (err) {
                 console.warn(`File not found at path: ${filePath}`);
                 return res.status(404).json({ message: "Note file not found on server" });
             }

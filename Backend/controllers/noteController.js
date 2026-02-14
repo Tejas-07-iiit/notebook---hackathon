@@ -1,6 +1,7 @@
 const Note = require("../Models/Note.model");
 const path = require("path");
-const fs = require("fs");
+const fs = require("fs").promises; // Use fs.promises
+const fsSync = require("fs"); // Keep fsSync for constants or streams if needed (e.g. createReadStream)
 
 exports.uploadNote = async (req, res) => {
   console.log("======= UPLOAD NOTE START =======");
@@ -24,10 +25,14 @@ exports.uploadNote = async (req, res) => {
       collegeId: req.user.collegeId
     } : 'NO USER');
 
-    // Check if file exists
+    // Check if file exists (Async)
     if (req.file && req.file.path) {
-      const fileExists = fs.existsSync(req.file.path);
-      console.log(`📁 File exists on disk: ${fileExists} at ${req.file.path}`);
+      try {
+        await fs.access(req.file.path);
+        console.log(`📁 File exists on disk at ${req.file.path}`);
+      } catch (e) {
+        console.log(`⚠️ File does NOT exist on disk at ${req.file.path}`);
+      }
     }
 
     const { title, description, subject, department, semester, type, year, examType } = req.body;
@@ -53,10 +58,12 @@ exports.uploadNote = async (req, res) => {
       // Delete the uploaded file if validation fails
       if (req.file.path) {
         console.log("🗑️ Deleting uploaded file due to validation failure...");
-        fs.unlink(req.file.path, (err) => {
-          if (err) console.error("Error deleting file:", err);
-          else console.log("✅ File deleted successfully");
-        });
+        try {
+          await fs.unlink(req.file.path);
+          console.log("✅ File deleted successfully");
+        } catch (err) {
+          console.error("Error deleting file:", err);
+        }
       }
 
       return res.status(400).json({
@@ -127,10 +134,12 @@ exports.uploadNote = async (req, res) => {
     // Delete the uploaded file if there's an error
     if (req.file && req.file.path) {
       console.log("🗑️ Attempting to delete uploaded file after error...");
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.error("Error deleting file:", err);
-        else console.log("✅ File deleted after error");
-      });
+      try {
+        await fs.unlink(req.file.path);
+        console.log("✅ File deleted after error");
+      } catch (unlinkErr) {
+        console.error("Error deleting file:", unlinkErr);
+      }
     }
 
     res.status(500).json({
@@ -221,12 +230,13 @@ exports.deleteNote = async (req, res) => {
       const filePath = path.join(__dirname, '..', note.fileUrl);
       console.log("Looking for file at:", filePath);
 
-      if (fs.existsSync(filePath)) {
+      try {
+        await fs.access(filePath);
         console.log("✅ File exists, deleting...");
-        fs.unlinkSync(filePath);
+        await fs.unlink(filePath);
         console.log("✅ File deleted:", filePath);
-      } else {
-        console.log("⚠️ File not found at path:", filePath);
+      } catch (err) {
+        console.log("⚠️ File not found at path or cannot delete:", filePath);
       }
     } else {
       console.log("⚠️ No fileUrl in note");
@@ -243,5 +253,38 @@ exports.deleteNote = async (req, res) => {
       message: "Error deleting note",
       error: err.message
     });
+  }
+};
+
+exports.downloadNote = async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, '..', 'uploads', filename);
+
+    // Security check: ensure path is within uploads directory
+    const resolvedPath = path.resolve(filePath);
+    const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+    if (!resolvedPath.startsWith(uploadsDir)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      await fs.access(filePath);
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error("Error downloading file:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ message: "Error downloading file" });
+          }
+        }
+      });
+    } catch (err) {
+      console.error("File not found for download:", filePath);
+      res.status(404).json({ message: "File not found" });
+    }
+
+  } catch (err) {
+    console.error("Download error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -18,7 +18,8 @@ const NoteCard = ({ note }) => {
 
   const handleDownload = () => {
     if (note.fileUrl) {
-      window.open(`${process.env.REACT_APP_API_URL}${note.fileUrl}`, '_blank');
+      const filename = note.fileUrl.split('/').pop();
+      window.open(`${process.env.REACT_APP_API_URL}/api/notes/download/${filename}`, '_blank');
     }
   };
 
